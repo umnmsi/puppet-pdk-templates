@@ -64,19 +64,17 @@ branches:
   only:
     - master
     - /^v\d/
+    - /^\d+\./
 <% if @configs['branches'] -%>
 <%   @configs['branches'].each do |branch| -%>
     - <%= branch %>
 <%   end -%>
 <% end -%>
 notifications:
-  email: false
-deploy:
-  provider: puppetforge
-  user: puppet
-  password:
-    secure: "<%= @configs['secure'] %>"
-  on:
-    tags: true
-    all_branches: true
-    condition: "$DEPLOY_TO_FORGE = yes"
+  email: true
+  irc:
+    channels:
+      - "irc.msi.umn.edu#puppet"
+    on_success: change
+    on_failure: always
+    skip_join: true
