@@ -1,5 +1,6 @@
 require 'puppetlabs_spec_helper/rake_tasks'
 require 'puppet-syntax/tasks/puppet-syntax'
+require 'puppet_blacksmith/rake_tasks' if Bundler.rubygems.find_name('puppet-blacksmith').any?
 <% if ! @configs['requires'].nil? -%>
 <%   @configs['requires'].each do |item| -%>
 require '<%= item %>'
@@ -9,4 +10,9 @@ require '<%= item %>'
 <%   @configs['imports'].each do |item| -%>
 import '<%= item %>'
 <%   end -%>
+<% end -%>
+
+<% checks = @configs['default_disabled_lint_checks'] + ( @configs['extra_disabled_lint_checks'] || [] ) -%>
+<% checks.each do |check| -%>
+PuppetLint.configuration.send('<%= check %>')
 <% end -%>

@@ -1,3 +1,9 @@
+<%- if @configs['mock_with'] -%>
+RSpec.configure do |c|
+  c.mock_with <%= @configs['mock_with'] %>
+end
+<%- end -%>
+
 require 'puppetlabs_spec_helper/module_spec_helper'
 require 'rspec-puppet-facts'
 
@@ -27,11 +33,15 @@ end
 
 RSpec.configure do |c|
   c.default_facts = default_facts
-  <%- if @configs['mock_with'] -%>
-  c.mock_with <%= @configs['mock_with'] %>
-  <%- end -%>
   <%- if @configs['hiera_config'] -%>
   c.hiera_config = <%= @configs['hiera_config'] %>
+  <%- end -%>
+  <%- if @configs['strict_level'] -%>
+  c.before :each do
+    # set to strictest setting for testing
+    # by default Puppet runs at warning level
+    Puppet.settings[:strict] = <%= @configs['strict_level'] %>
+  end
   <%- end -%>
 end
 <%- [@configs['spec_overrides']].flatten.compact.each do |line| -%>
