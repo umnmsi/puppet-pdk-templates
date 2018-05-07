@@ -567,3 +567,15 @@ spec/default_facts.yml:
   macaddress: "AA:AA:AA:AA:AA:AA"
 spec/spec_helper.rb:
   strict_level: ":warning"
+Jenkinsfile:
+  version_pairs:
+    - puppet: 4.0
+      ruby: 2.1.9
+    - puppet: 5.0
+      ruby: 2.4.1
+  checks:
+    - rubocop
+    - 'syntax lint'
+    - metadata_lint
+    - release_checks
+    - spec
