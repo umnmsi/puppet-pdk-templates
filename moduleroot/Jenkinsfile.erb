@@ -26,7 +26,9 @@ bundle install --without system_tests"""
     try {
       stage("Ruby ${it.ruby} / Puppet ${it.puppet}") {
         dir("${pwd()}/../workspace/puppet${it.puppet}_ruby${it.ruby}") {
-          sshagent(credentials: ['75d5b2ba-a76d-4e30-aa3a-0b749b02f1cb']) {
+<% if @configs.has_key?('ssh_credentials') -%>
+          sshagent(credentials: ['<%= @configs['ssh_credentials'] %>']) {
+<% end -%>
             withEnv([ "PUPPET_GEM_VERSION=~> ${it.puppet}" ]) {
               def env_checks = checks.collect { check -> [check, {
                 sh """#!/bin/bash -l
@@ -35,7 +37,9 @@ bundle exec rake ${check}"""
               }]}.collectEntries({ it })
               parallel env_checks
             }
+<% if @configs.has_key?('ssh_credentials') -%>
           }
+<% end -%>
         }
       }
     }
@@ -49,14 +53,18 @@ bundle exec rake ${check}"""
       def versions = version_matrix.last()
       withEnv([ "PUPPET_GEM_VERSION=~> ${versions.puppet}" ]) {
         dir("${pwd()}/../workspace/puppet${versions.puppet}_ruby${versions.ruby}") {
-          sshagent(credentials: ['75d5b2ba-a76d-4e30-aa3a-0b749b02f1cb']) {
+<% if @configs.has_key?('ssh_credentials') -%>
+          sshagent(credentials: ['<%= @configs['ssh_credentials'] %>']) {
+<% end -%>
             sh '''#!/bin/bash -l
-/usr/local/bin/pdk convert --force --skip-interview --template-url "git@github.umn.edu:msi/puppet-pdk-templates.git"
+/usr/local/bin/pdk convert --force --skip-interview --template-url "<%= @configs['template_url'] %>"
 if [ ! -z "$(git status --porcelain)" ]; then
   cat convert_report.txt
   exit 1
 fi'''
+<% if @configs.has_key?('ssh_credentials') -%>
           }
+<% end -%>
         }
       }
     }
@@ -77,4 +85,3 @@ rvm --force gemset delete ${env.BUILD_TAG}_puppet${it.puppet}"""
 
 }
 // vim: syn=groovy ts=2 sw=2 expandtab
-
