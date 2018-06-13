@@ -14,5 +14,9 @@ import '<%= item %>'
 
 <% checks = @configs['default_disabled_lint_checks'] + ( @configs['extra_disabled_lint_checks'] || [] ) -%>
 <% checks.each do |check| -%>
-PuppetLint.configuration.send('<%= check %>')
+PuppetLint.configuration.send('disable_<%= check %>')
 <% end -%>
+
+<%- [@configs['extras']].flatten.compact.each do |line| -%>
+<%= line %>
+<%- end -%>
