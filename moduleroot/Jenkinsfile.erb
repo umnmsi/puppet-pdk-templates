@@ -1,0 +1,87 @@
+def version_matrix = [
+<% @configs['version_pairs'].each do |version_pair| -%>
+  [<%= version_pair.map{ |name,version| "#{name}: '#{version}'" }.join(', ') %>],
+<% end -%>
+]
+def checks = [<%= @configs['checks'].map { |check| "'#{check}'" }.join(', ') %>]
+
+node {
+
+  stage('Prepare') {
+    parallel version_matrix.collect {["Ruby ${it.ruby} / Puppet ${it.puppet}", {
+      ws("${pwd()}/../workspace/puppet${it.puppet}_ruby${it.ruby}") {
+        withEnv([ "PUPPET_GEM_VERSION=~> ${it.puppet}" ]) {
+          checkout scm
+          sh """#!/bin/bash -l
+rm -f Gemfile.lock
+rvm use ${it.ruby}@${env.BUILD_TAG}_puppet${it.puppet} --create
+gem install bundler --no-rdoc --no-ri
+bundle install --without system_tests"""
+        }
+      }
+    }]}.collectEntries({ it })
+  }
+
+  version_matrix.each {
+    try {
+      stage("Ruby ${it.ruby} / Puppet ${it.puppet}") {
+        dir("${pwd()}/../workspace/puppet${it.puppet}_ruby${it.ruby}") {
+<% if @configs.has_key?('ssh_credentials') -%>
+          sshagent(credentials: ['<%= @configs['ssh_credentials'] %>']) {
+<% end -%>
+            withEnv([ "PUPPET_GEM_VERSION=~> ${it.puppet}" ]) {
+              def env_checks = checks.collect { check -> [check, {
+                sh """#!/bin/bash -l
+rvm use ${it.ruby}@${env.BUILD_TAG}_puppet${it.puppet}
+bundle exec rake ${check}"""
+              }]}.collectEntries({ it })
+              parallel env_checks
+            }
+<% if @configs.has_key?('ssh_credentials') -%>
+          }
+<% end -%>
+        }
+      }
+    }
+    catch(err) {
+      currentBuild.result = 'FAIL'
+    }
+  }
+
+  try {
+    stage('PDK Convert') {
+      def versions = version_matrix.last()
+      withEnv([ "PUPPET_GEM_VERSION=~> ${versions.puppet}" ]) {
+        dir("${pwd()}/../workspace/puppet${versions.puppet}_ruby${versions.ruby}") {
+<% if @configs.has_key?('ssh_credentials') -%>
+          sshagent(credentials: ['<%= @configs['ssh_credentials'] %>']) {
+<% end -%>
+            sh '''#!/bin/bash -l
+/usr/local/bin/pdk convert --force --skip-interview --template-url "<%= @configs['template_url'] %>"
+if [ ! -z "$(git status --porcelain)" ]; then
+  cat convert_report.txt
+  exit 1
+fi'''
+<% if @configs.has_key?('ssh_credentials') -%>
+          }
+<% end -%>
+        }
+      }
+    }
+  } catch (err) {
+    currentBuild.result = 'FAIL'
+  }
+
+  stage('Cleanup') {
+    version_matrix.each {
+      dir("${pwd()}/../workspace/puppet${it.puppet}_ruby${it.ruby}") {
+        sh """#!/bin/bash -l
+rvm use ${it.ruby}@${env.BUILD_TAG}_puppet${it.puppet}
+rvm --force gemset delete ${env.BUILD_TAG}_puppet${it.puppet}"""
+        deleteDir()
+      }
+    }
+  }
+
+}
+// vim: syn=groovy ts=2 sw=2 expandtab

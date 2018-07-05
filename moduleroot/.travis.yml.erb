@@ -21,7 +21,6 @@ before_install:
   - bundle -v
   - rm -f Gemfile.lock
   - gem update --system
-  - gem update bundler
   - gem --version
   - bundle -v
 script:
@@ -31,9 +30,20 @@ rvm:
 <% @configs['ruby_versions'].each do |ruby_version| -%>
   - <%= ruby_version %>
 <% end -%>
+<% if @configs.has_key?('env') || @configs.has_key?('global_env') -%>
 env:
-<% @configs['env'].each do |env| -%>
-  - <%= env %>
+<%   if @configs.has_key?('global_env') -%>
+  global:
+<%     @configs['global_env'].each do |env| -%>
+    - <%= env %>
+<%     end -%>
+<%   end -%>
+<%   if @configs.has_key?('env') -%>
+  matrix:
+<%     @configs['env'].each do |env| -%>
+    - <%= env %>
+<%     end -%>
+<%   end -%>
 <% end -%>
 matrix:
   fast_finish: true
@@ -45,7 +55,7 @@ matrix:
       <%= key %>: <%= job[key].gsub(/@@SET@@/, set['set']) %>
 <%   end -%>
 <% end -%>
-<% (@configs['includes'] + (@configs['extras'] || [])).each do |job| -%>
+<% (@configs['includes'] - (@configs['remove_includes'] || []) + (@configs['extras'] || [])).each do |job| -%>
     -
 <%   job.keys.sort.each do |key| -%>
       <%= key %>: <%= job[key] %>
@@ -78,3 +88,14 @@ notifications:
     on_success: change
     on_failure: always
     skip_join: true
+<% if @configs['deploy'] -%>
+deploy:
+  provider: puppetforge
+  user: <%= @configs['user'] %>
+  password:
+    secure: "<%= @configs['secure'] %>"
+  on:
+    tags: true
+    all_branches: true
+    condition: "$DEPLOY_TO_FORGE = yes"
+<% end -%>

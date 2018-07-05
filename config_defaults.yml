@@ -7,6 +7,7 @@
     '*.sh': 'eol=lf'
 .gitignore:
   required: &ignorepaths
+      - '.git/'
       - '.*.sw[op]'
       - '.metadata'
       - '.yardoc'
@@ -28,14 +29,15 @@
       - '/tmp/'
       - '/vendor/'
       - '/convert_report.txt'
+      - '/update_report.txt'
       - '.DS_Store'
 .pdkignore:
   required: *ignorepaths
 .travis.yml:
   ruby_versions:
     - 2.4.1
-  env:
-    - PUPPET_GEM_VERSION="~> 5.0" CHECK=spec
+  global_env:
+    - BEAKER_PUPPET_COLLECTION=puppet5 PUPPET_GEM_VERSION="~> 5.0"
   bundler_args: --without system_tests
   docker_sets:
   docker_defaults:
@@ -44,43 +46,40 @@
     sudo: required
     dist: trusty
     services: docker
-    env: PUPPET_INSTALL_TYPE=agent BEAKER_debug=true BEAKER_set=@@SET@@
+    env: PUPPET_INSTALL_TYPE=agent BEAKER_debug=true BEAKER_PUPPET_COLLECTION=puppet5 BEAKER_set=@@SET@@
     script: bundle exec rake beaker
   includes:
-    - env: CHECK=rubocop
-    - env: CHECK="syntax lint"
-    - env: CHECK=metadata_lint
-    - env: CHECK=spec
-    - env: PUPPET_GEM_VERSION="~> 4.0" CHECK=spec
-      rvm:  2.1.9
+    - env: CHECK="syntax lint metadata_lint check:symlinks check:git_ignore check:dot_underscore check:test_file rubocop"
+    - env: CHECK=parallel_spec
+    - env: PUPPET_GEM_VERSION="~> 4.0" CHECK=parallel_spec
+      rvm: 2.1.9
+  deploy: true
+  user: 'puppet'
 .yardopts:
   markup: markdown
 appveyor.yml:
   appveyor_bundle_install: "bundle install --jobs 4 --retry 2 --without system_tests"
   matrix:
     - RUBY_VERSION: 24-x64
-      CHECK: "syntax lint"
-    - RUBY_VERSION: 24-x64
-      CHECK: metadata_lint
-    - RUBY_VERSION: 24-x64
-      CHECK: rubocop
+      CHECK: "syntax lint metadata_lint check:symlinks check:git_ignore check:dot_underscore check:test_file rubocop"
     - PUPPET_GEM_VERSION: ~> 4.0
       RUBY_VERSION: 21
-      CHECK: spec
+      CHECK: parallel_spec
     - PUPPET_GEM_VERSION: ~> 4.0
       RUBY_VERSION: 21-x64
-      CHECK: spec
+      CHECK: parallel_spec
     - PUPPET_GEM_VERSION: ~> 5.0
       RUBY_VERSION: 24
-      CHECK: spec
+      CHECK: parallel_spec
     - PUPPET_GEM_VERSION: ~> 5.0
       RUBY_VERSION: 24-x64
-      CHECK: spec
+      CHECK: parallel_spec
   test_script:
     - bundle exec rake %CHECK%
 Rakefile:
   default_disabled_lint_checks:
     - 'relative'
+  extras: []
 .rubocop.yml:
   selected_profile: strict
   default_configs: &default_configs
@@ -348,13 +347,14 @@ Rakefile:
     Style/WhileUntilDo:
     Style/WhileUntilModifier:
     Style/WordArray:
+      EnforcedStyle: brackets
     Style/YodaCondition:
     Style/ZeroLengthPredicate:
 
   profiles:
     # no rubocops enabled, caveat emptor!
     off:
-      enabled_cops: []
+      enabled_cops: {}
 
     # a sanitized list of cops that'll cleanup a code base without much effort
     # they all support autocorrect, and should be fairly uncontroversial across
@@ -458,6 +458,9 @@ Rakefile:
         Style/ClassVars:
         Style/ConstantName:
         Style/Documentation:
+          Exclude:
+          - 'lib/puppet/parser/functions/**/*'
+          - 'spec/**/*'
         Style/DoubleNegation:
         Style/EndBlock:
         Style/FileName:
@@ -509,6 +512,9 @@ Gemfile:
       - gem: json
         version: '= 1.8.1'
         condition: "Gem::Version.new(RUBY_VERSION.dup) == Gem::Version.new('2.1.9')"
+      - gem: json
+        version: '<= 2.0.4'
+        condition: "Gem::Version.new(RUBY_VERSION.dup) == Gem::Version.new('2.4.4')"
       - gem: 'puppet-module-posix-default-r#{minor_version}'
         platforms: ruby
       - gem: 'puppet-module-posix-dev-r#{minor_version}'
@@ -543,15 +549,40 @@ Gemfile:
     #   - gem: beaker-rspec
     #     from_env: BEAKER_RSPEC_VERSION
 .gitlab-ci.yml:
-  ruby_versions:
-    - 2.4.1
-    - 2.1.9
-  variables:
-    PUPPET_GEM_VERSION: "~> 4.0"
-    CHECK: spec
-  bundler_args: --without system_tests
+  defaults:
+    cache:
+      paths:
+        - 'vendor/bundle'
+    bundler_args: '--without system_tests --path vendor/bundle --jobs $(nproc)'
+    ruby_versions:
+      '2.1.9':
+        checks:
+          - parallel_spec
+        puppet_version: '~> 4.0'
+      '2.4.4':
+        checks:
+          - 'syntax lint metadata_lint check:symlinks check:git_ignore check:dot_underscore check:test_file rubocop'
+          - parallel_spec
+        puppet_version: '~> 5.5'
+    # beaker: true
 spec/default_facts.yml:
   concat_basedir: "/tmp"
   ipaddress: "172.16.254.254"
   is_pe: false
   macaddress: "AA:AA:AA:AA:AA:AA"
+spec/spec_helper.rb:
+  strict_level: ":warning"
+Jenkinsfile:
+  version_pairs:
+    - puppet: 4.0
+      ruby: 2.1.9
+    - puppet: 5.0
+      ruby: 2.4.1
+  checks:
+    - rubocop
+    - 'syntax lint'
+    - metadata_lint
+    - release_checks
+    - spec
+  ssh_credentials: '75d5b2ba-a76d-4e30-aa3a-0b749b02f1cb'
+  template_url: 'git@github.umn.edu:msi/puppet-pdk-templates.git'
