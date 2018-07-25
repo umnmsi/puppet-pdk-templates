@@ -581,7 +581,7 @@ Jenkinsfile:
     - puppet: 4.0
       ruby: 2.1.9
     - puppet: 5.0
-      ruby: 2.4.1
+      ruby: 2.4.4
   additional_checks:
     - syntax
     - lint
