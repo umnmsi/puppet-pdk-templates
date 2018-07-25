@@ -3,7 +3,7 @@ def version_matrix = [
   [<%= version_pair.map{ |name,version| "#{name}: '#{version}'" }.join(', ') %>],
 <% end -%>
 ]
-def checks = [<%= @configs['checks'].map { |check| "'#{check}'" }.join(', ') %>]
+def additional_checks = [<%= @configs['additional_checks'].map { |check| "'#{check}'" }.join(', ') %>]
 
 node {
 
@@ -30,7 +30,7 @@ bundle install --without system_tests"""
           sshagent(credentials: ['<%= @configs['ssh_credentials'] %>']) {
 <% end -%>
             withEnv([ "PUPPET_GEM_VERSION=~> ${it.puppet}" ]) {
-              def env_checks = checks.collect { check -> [check, {
+              def env_checks = additional_checks.collect { check -> [check, {
                 sh """#!/bin/bash -l
 rvm use ${it.ruby}@${env.BUILD_TAG}_puppet${it.puppet}
 bundle exec rake ${check}"""
@@ -46,6 +46,28 @@ bundle exec rake ${check}"""
     catch(err) {
       currentBuild.result = 'FAIL'
     }
+  }
+
+  try {
+    stage('Spec') {
+      parallel version_matrix.collect {["Ruby ${it.ruby} / Puppet ${it.puppet}", {
+        dir("${pwd()}/../workspace/puppet${it.puppet}_ruby${it.ruby}") {
+<% if @configs.has_key?('ssh_credentials') -%>
+          sshagent(credentials: ['<%= @configs['ssh_credentials'] %>']) {
+<% end -%>
+            withEnv([ "PUPPET_GEM_VERSION=~> ${it.puppet}" ]) {
+              sh """#!/bin/bash -l
+rvm use ${it.ruby}@${env.BUILD_TAG}_puppet${it.puppet}
+bundle exec rake spec"""
+            }
+<% if @configs.has_key?('ssh_credentials') -%>
+          }
+<% end -%>
+        }
+      }]}.collectEntries({ it })
+    }
+  } catch (err) {
+    currentBuild.result = 'FAIL'
   }
 
   try {
