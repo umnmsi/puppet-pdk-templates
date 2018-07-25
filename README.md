@@ -73,14 +73,20 @@ Travis uses a .travis.yml file in the root of your repository to learn about you
 
 | Key            | Description   |
 | :------------- |:--------------|
+| simplecov      |Set to `true` to enable collecting ruby code coverage.|
 | ruby versions  |Define the ruby versions on which you want your builds to be executed.|
 | bunder\_args   |Define any arguments you want to pass through to bundler. The default is `--without system_tests` which avoids installing unnessesary gems.|
 | env            |Allows you to add new travis job matrix entries based on the included environmnet variables, one per `env` entry; for example, for adding jobs with specific `PUPPET_GEM_VERSION` and/or `CHECK` values.  See the [Travis Environment Variables](https://docs.travis-ci.com/user/environment-variables) documentation for details.|
 | global_env     |Allows you to set global environment variables which will be defined for all travis jobs; for example, `PARALLEL_TEST_PROCESSORS` or `TIMEOUT`.  See the [Travis Global Environment Variables](https://docs.travis-ci.com/user/environment-variables/#Global-Variables) documentation for details.|
-|docker_sets     |Allows you to configure sets of docker to run your tests on. For example, if I wanted to run on a docker instance of Ubuntu I would add  `set: docker/ubuntu-14.04` to my docker\_sets attribute.|
+|docker_sets     |Allows you to configure sets of docker to run your tests on. For example, if I wanted to run on a docker instance of Ubuntu I would add  `set:docker/ubuntu-14.04` to my docker\_sets attribute.  docker_sets is a hash that supports the 'set' and 'testmode' key|
+|docker_sets['set']| this should refrence the docker nodeset that you wish to run|
+|docker_sets['testmode']| this configueres the `BEAKER_TESTMODE` to use when testing the docker instance.  the two options are `apply` and `agent` if omitted `apply` is used by default|
 |docker_defaults |Defines what values are used as default when using the `docker_sets` definition. Includes ruby version, sudo being enabled, the distro, the services, the env variables and the script to execute.|
 |includes        |Ensures that the .travis file includes the following checks by default: Rubocop, Puppet Lint, Metadata Lint.|
 |remove_includes |Allows you to remove includes set in config_defaults.yml.|
+|branches        |Allows you to specify the only branches that travis will run builds on. The default branches are `master` and `/^v\d/`. |
+|branches_except |Allows you to specify branches that travis will not build on.|
+|remove_branches |Allows you to remove default branches set in config_defaults.yml.|
 
 ### .yardopts
 
@@ -108,6 +114,10 @@ Travis uses a .travis.yml file in the root of your repository to learn about you
 
 | Key            | Description   |
 | :------------- |:--------------|
+|requires|A list of hashes with the library to `'require'`, and an optional `'conditional'`.|
+|changelog_user|Sets the github user for the change_log_generator rake task.Optional, if not set it will read the 'author' from the metadata.json file|
+|changelog_project|Sets the github project for the change_log_generator rake task.Optional, if not set it will read the 'name' from the metadata.json file|
+|changelog_since_tag|Sets the github since_tag for the change_log_generator rake task.Required for the changlog rake task|
 |default\_disabled\_lint\_checks| Defines any checks that are to be disabled by default when running lint checks. As default we disable the `--relative` lint check, which compares the module layout relative to the module root. |
 |extra\_disabled\_lint\_checks| Defines any checks that are to be disabled as extras when running lint checks. No defaults are defined for this configuration. |
 |extras|An array of extra lines to add into your Rakefile|
