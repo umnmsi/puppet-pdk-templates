@@ -36,6 +36,19 @@ RSpec.configure do |c|
   <%- if @configs['hiera_config'] -%>
   c.hiera_config = '<%= @configs['hiera_config'] %>'
   <%- end -%>
+  <%- if @configs['disable_module_hiera'] -%>
+  c.disable_module_hiera = <%= @configs['disable_module_hiera'] %>
+  <%- end -%>
+  <%- if @configs['use_fixture_spec_hiera'] -%>
+  c.use_fixture_spec_hiera = <%= @configs['use_fixture_spec_hiera'] %>
+  <%- end -%>
+  <%- if @configs['fixture_hiera_configs'] -%>
+  c.fixture_hiera_configs = {
+    <%- @configs['fixture_hiera_configs'].each do |mod, conf| -%>
+    '<%= mod %>' => '<%= conf %>'
+    <%- end -%>
+  }
+  <%- end -%>
   <%- if @configs['strict_level'] -%>
   c.before :each do
     # set to strictest setting for testing
