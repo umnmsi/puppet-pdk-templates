@@ -45,7 +45,7 @@ RSpec.configure do |c|
   <%- if @configs['fixture_hiera_configs'] -%>
   c.fixture_hiera_configs = {
     <%- @configs['fixture_hiera_configs'].each do |mod, conf| -%>
-    '<%= mod %>' => '<%= conf %>'
+    '<%= mod %>' => '<%= conf %>',
     <%- end -%>
   }
   <%- end -%>
