@@ -532,6 +532,9 @@ Gemfile:
           - mswin
           - mingw
           - x64_mingw
+      - gem: 'rspec-puppet'
+        git: 'https://github.com/nabertrand/rspec-puppet.git'
+        branch: 'hiera'
     # ':system_tests':
     #   - gem: 'puppet-module-posix-system-r#{minor_version}'
     #     platforms: ruby
@@ -576,6 +579,7 @@ spec/default_facts.yml:
 spec/spec_helper.rb:
   strict_level: ":warning"
   hiera_config: 'spec/fixtures/hiera.yaml'
+  use_fixture_spec_hiera: true
 Jenkinsfile:
   version_pairs:
     - puppet: 4.0
