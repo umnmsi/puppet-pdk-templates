@@ -578,7 +578,7 @@ spec/default_facts.yml:
   macaddress: "AA:AA:AA:AA:AA:AA"
 spec/spec_helper.rb:
   mock_with: ':rspec'
-  strict_level: ':error'
+  strict_level: ':warning'
   hiera_config: 'spec/fixtures/hiera.yaml'
   use_fixture_spec_hiera: true
 Jenkinsfile:
