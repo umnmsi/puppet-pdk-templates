@@ -592,8 +592,6 @@ spec/spec_helper.rb:
   use_fixture_spec_hiera: true
 Jenkinsfile:
   version_pairs:
-    - puppet: 4.0
-      ruby: 2.1.9
     - puppet: 5.0
       ruby: 2.4.4
   additional_checks:
