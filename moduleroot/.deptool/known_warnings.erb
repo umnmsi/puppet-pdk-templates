@@ -1,0 +1,28 @@
+duplicate_definition type: :function_3x, name: 'strftime', source: 'stdlib'
+duplicate_definition type: :function_3x, name: 'dig', source: 'stdlib'
+duplicate_definition type: :function_3x, name: 'type', source: 'stdlib'
+duplicate_definition type: :function, name: 'length', source: 'stdlib'
+missing_definition type: :resource_type, name: 'portage::makeconf', source: 'modules/apache/manifests/mod/peruser.pp'
+missing_definition type: :resource_type, name: 'portage::makeconf', source: 'modules/apache/manifests/mod/event.pp'
+missing_definition type: :resource_type, name: 'portage::makeconf', source: 'modules/apache/manifests/mod/itk.pp'
+missing_definition type: :resource_type, name: 'portage::makeconf', source: 'modules/apache/manifests/mod/worker.pp'
+missing_definition type: :resource_type, name: 'portage::makeconf', source: 'modules/apache/manifests/mod/prefork.pp'
+missing_definition type: :resource_type, name: 'portage::makeconf', source: 'modules/apache/manifests/init.pp'
+missing_definition type: :variable, name: 'apache::params::distrelease', source: 'modules/apache/manifests/mod/proxy_html.pp'
+missing_definition type: :class, name: 'mcollective', source: 'modules/puppi/manifests/mcollective/server.pp'
+missing_definition type: :class, name: 'mcollective', source: 'modules/puppi/manifests/mcollective/client.pp'
+missing_definition type: :function, name: 'pe_build_version', source: 'modules/puppet_agent/manifests/prepare/package.pp'
+missing_definition type: :function, name: 'pe_build_version', source: 'modules/puppet_agent/manifests/params.pp'
+missing_definition type: :function, name: 'pe_build_version', source: 'modules/puppet_agent/manifests/osfamily/redhat.pp'
+missing_definition type: :function, name: 'pe_build_version', source: 'modules/puppet_agent/manifests/osfamily/debian.pp'
+missing_definition type: :function, name: 'pe_build_version', source: 'modules/puppet_agent/manifests/osfamily/suse.pp'
+missing_definition type: :function, name: 'pe_build_version', source: 'modules/puppet_agent/manifests/osfamily/solaris.pp'
+missing_definition type: :function, name: 'pe_build_version', source: 'modules/puppet_agent/manifests/windows/install.pp'
+missing_definition type: :function, name: 'pe_compiling_server_aio_build', source: 'modules/puppet_agent/manifests/params.pp'
+missing_definition type: :class, name: 'portage', source: 'modules/sudo/manifests/package.pp'
+missing_definition type: :resource_type, name: 'package_use', source: 'modules/sudo/manifests/package.pp'
+<% if ! @configs['warnings'].nil? -%>
+<%   @configs['warnings'].each do |warning| -%>
+<%= warning %>
+<%   end -%>
+<% end -%>
