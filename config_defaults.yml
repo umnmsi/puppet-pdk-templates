@@ -532,9 +532,18 @@ Gemfile:
           - mswin
           - mingw
           - x64_mingw
-      - gem: 'rspec-puppet'
-        git: 'https://github.com/nabertrand/rspec-puppet.git'
-        branch: 'hiera'
+      - gem: generate-puppetfile
+        git: https://github.com/nabertrand/puppet-generate-puppetfile.git
+        branch: filter
+      - gem: puppetlabs_spec_helper
+        git: https://github.com/nabertrand/puppetlabs_spec_helper.git
+        branch: verify_forge_ver
+      - gem: puppet-deptool
+        git: https://github.com/nabertrand/puppet-deptool.git
+        branch: master
+      - gem: rspec-puppet
+        git: https://github.com/nabertrand/rspec-puppet.git
+        branch: hiera
     # ':system_tests':
     #   - gem: 'puppet-module-posix-system-r#{minor_version}'
     #     platforms: ruby
