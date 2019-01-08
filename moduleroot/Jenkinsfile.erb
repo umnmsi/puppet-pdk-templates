@@ -1,9 +1,10 @@
 def version_matrix = [
 <% @configs['version_pairs'].each do |version_pair| -%>
-  [<%= "puppet: '#{version_pair['puppet']', ruby: '#{version_pair['ruby']}', req: #{version_pair['req']}" %>],
+  [puppet: '<%= version_pair['puppet'] %>', ruby: '<%= version_pair['ruby'] %>', req: <%= version_pair['req'] %>],
 <% end -%>
 ]
 def additional_checks = [<%= @configs['additional_checks'].map { |check| "'#{check}'" }.join(', ') %>]
+def req = false
 
 node {
 
@@ -47,7 +48,9 @@ bundle exec rake ${check}"""
       }
     }
     catch(err) {
-      currentBuild.result = 'FAIL'
+      if (it.req) {
+        currentBuild.result = 'FAIL'
+      }
     }
   }
 
@@ -59,6 +62,7 @@ bundle exec rake ${check}"""
           sshagent(credentials: ['<%= @configs['ssh_credentials'] %>']) {
 <% end -%>
             withEnv([ "PUPPET_GEM_VERSION=~> ${it.puppet}" ]) {
+              req = it.req
               sh """#!/bin/bash -l
 rvm use ${it.ruby}@${env.BUILD_TAG}_puppet${it.puppet}
 bundle exec rake spec"""
@@ -70,7 +74,9 @@ bundle exec rake spec"""
       }]}.collectEntries({ it })
     }
   } catch (err) {
-    currentBuild.result = 'FAIL'
+    if (req) {
+      currentBuild.result = 'FAIL'
+    }
   }
 
   try {
