@@ -1,6 +1,6 @@
 def version_matrix = [
 <% @configs['version_pairs'].each do |version_pair| -%>
-  [<%= version_pair.map{ |name,version| "#{name}: '#{version}'" }.join(', ') %>],
+  [<%= "puppet: '#{version_pair['puppet']', ruby: '#{version_pair['ruby']}', req: #{version_pair['req']}" %>],
 <% end -%>
 ]
 def additional_checks = [<%= @configs['additional_checks'].map { |check| "'#{check}'" }.join(', ') %>]

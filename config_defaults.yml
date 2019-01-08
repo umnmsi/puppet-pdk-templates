@@ -594,6 +594,10 @@ Jenkinsfile:
   version_pairs:
     - puppet: 5.0
       ruby: 2.4.4
+      req: true
+    - puppet: 6.0
+      ruby: 2.5.1
+      req: false
   additional_checks:
     - syntax
     - lint
