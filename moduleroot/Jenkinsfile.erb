@@ -4,7 +4,6 @@ def version_matrix = [
 <% end -%>
 ]
 def additional_checks = [<%= @configs['additional_checks'].map { |check| "'#{check}'" }.join(', ') %>]
-def req = false
 
 node {
 
@@ -49,7 +48,7 @@ bundle exec rake ${check}"""
     }
     catch(err) {
       if (it.req) {
-        currentBuild.result = 'FAIL'
+        currentBuild.result = 'FAILURE'
       }
     }
   }
@@ -57,26 +56,32 @@ bundle exec rake ${check}"""
   try {
     stage('Spec') {
       parallel version_matrix.collect {["Ruby ${it.ruby} / Puppet ${it.puppet}", {
-        dir("${baseDir}/puppet${it.puppet}_ruby${it.ruby}/${moduleDir}") {
+        try {
+          dir("${baseDir}/puppet${it.puppet}_ruby${it.ruby}/${moduleDir}") {
 <% if @configs.has_key?('ssh_credentials') -%>
-          sshagent(credentials: ['<%= @configs['ssh_credentials'] %>']) {
+            sshagent(credentials: ['<%= @configs['ssh_credentials'] %>']) {
 <% end -%>
-            withEnv([ "PUPPET_GEM_VERSION=~> ${it.puppet}" ]) {
-              req = it.req
-              sh """#!/bin/bash -l
+              withEnv([ "PUPPET_GEM_VERSION=~> ${it.puppet}" ]) {
+                sh """#!/bin/bash -l
 rvm use ${it.ruby}@${env.BUILD_TAG}_puppet${it.puppet}
 bundle exec rake spec"""
-            }
+              }
 <% if @configs.has_key?('ssh_credentials') -%>
-          }
+            }
 <% end -%>
+          }
+        } catch (err) {
+          println "Caught error ${err} during Ruby ${it.ruby} / Puppet ${it.puppet}, req = ${it.req}"
+          if (it.req) {
+            println "Setting build result to FAILURE"
+            currentBuild.result = 'FAILURE'
+          }
+          throw err
         }
       }]}.collectEntries({ it })
     }
   } catch (err) {
-    if (req) {
-      currentBuild.result = 'FAIL'
-    }
+    println "Caught error ${err} during Spec stage"
   }
 
   try {
@@ -100,7 +105,7 @@ fi'''
       }
     }
   } catch (err) {
-    currentBuild.result = 'FAIL'
+    currentBuild.result = 'FAILURE'
   }
 
   stage('Cleanup') {
