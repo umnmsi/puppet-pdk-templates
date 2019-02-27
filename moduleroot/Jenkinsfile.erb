@@ -99,7 +99,9 @@ if [ ! -z "$(git status --porcelain)" ]; then
     # only problem is metadata.json, see if it's only the pdk version
     git show HEAD:metadata.json | jq 'del(."pdk-version")' > .metadata.json.nopdk_pre
     jq 'del(."pdk-version")' metadata.json > .metadata.json.nopdk_post
-    if [[ -z "$(diff .metadata.json.nopdk_pre .metadata.json.nopdk_post)" ]]; then
+    diff .metadata.json.nopdk_pre .metadata.json.nopdk_post
+    if [[ $? -eq 0 ]]; then
+      echo 'pdk convert only differs in pdk version used. This is okay.'
       exit 0
     fi
   fi
