@@ -93,7 +93,8 @@ bundle exec rake spec"""
           sshagent(credentials: ['<%= @configs['ssh_credentials'] %>']) {
 <% end -%>
             sh '''#!/bin/bash -l
-/usr/local/bin/pdk convert --force --skip-interview --template-url "git@github.umn.edu:msi/puppet-pdk-templates.git"
+rm -f Gemfile.lock
+/usr/local/bin/pdk convert --force --skip-interview --template-url "ssh://git@github.umn.edu/msi/puppet-pdk-templates.git" --template-ref "master"
 if [ ! -z "$(git status --porcelain)" ]; then
   if [ -z "$(git status --porcelain | grep -vF ' M metadata.json')" ]; then
     # only problem is metadata.json, see if it's only the pdk version
